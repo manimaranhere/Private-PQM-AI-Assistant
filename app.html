@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PQM Offline AI Assistant Workspace</title>
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --panel-bg: #ffffff;
+            --text-main: #1e293b;
+            --accent-blue: #2563eb;
+            --accent-green: #10b981;
+            --accent-purple: #7c3aed;
+            --accent-cyan: #0284c7;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.25rem;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        header p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .title-chat { color: var(--accent-blue); }
+        .title-audio { color: var(--accent-green); }
+        .title-pdf { color: var(--accent-purple); }
+        .title-vault { color: var(--accent-cyan); }
+
+        .btn-mic {
+            background-color: #64748b;
+            color: #ffffff;
+            border: none;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+            width: auto;
+            margin-top: 0;
+        }
+
+        .btn-mic:hover { opacity: 0.9; }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.85rem;
+            font-size: 0.9rem;
+            outline: none;
+            resize: vertical;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            border-color: #94a3b8;
+        }
+
+        .input-with-mic {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.85rem;
+        }
+
+        .input-with-mic input {
+            margin-bottom: 0;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 0.85rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-upload-wrapper:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-label-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            word-break: break-all;
+        }
+
+        button.action-btn {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            margin-top: auto;
+        }
+
+        button.action-btn:hover { opacity: 0.9; }
+        button.action-btn:disabled { background-color: #cbd5e1 !important; cursor: not-allowed; }
+
+        .btn-blue { background-color: var(--accent-blue); }
+        .btn-green { background-color: var(--accent-green); }
+        .btn-purple { background-color: var(--accent-purple); }
+        .btn-cyan { background-color: var(--accent-cyan); }
+
+        .output-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.75rem;
+            margin-top: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+
+        .output-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metadata-pill {
+            font-size: 0.8rem;
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 500;
+        }
+
+        .output-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #334155;
+            white-space: pre-wrap;
+        }
+
+        .loader {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #cbd5e1;
+            border-top-color: #64748b;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>PQM AI Assistant Interface</h1>
+            <p>100% Local &amp; Privacy-Enforced Compliance Pipeline</p>
+        </header>
+
+        <div class="grid-layout">
+            <!-- MODULE 1: TEXT CHAT -->
+            <div class="card">
+                <div class="card-header-flex">
+                    <span class="card-title title-chat">💬 Standard AI Chat</span>
+                    <button class="btn-mic" id="chatMicBtn" type="button" onclick="toggleVoiceTyping('chatInput', 'chatMicBtn')">🎤 Speak</button>
+                </div>
+                <textarea id="chatInput" rows="5" placeholder="Ask questions about quality records, procedures, or type 'take screenshot'..."></textarea>
+                <div class="loader" id="chatLoader"><div class="spinner"></div>Scanning vault documents...</div>
+                <button class="action-btn btn-blue" id="chatBtn" onclick="submitTextChat()">Send Query</button>
+            </div>
+
+            <!-- MODULE 2: WHATSAPP AUDIO -->
+            <div class="card">
+                <div class="card-header-flex">
+                    <span class="card-title title-audio">🎙️ Voice Note Query</span>
+                </div>
+                <div class="file-upload-wrapper">
+                    <span class="file-label-text" id="audioLabel">Click or Drag WhatsApp .opus file</span>
+                    <input type="file" id="audioFile" accept=".opus" onchange="updateFileLabel('audioFile', 'audioLabel')">
+                </div>
+                <div class="loader" id="audioLoader"><div class="spinner"></div>Transcribing audio &amp; answering...</div>
+                <button class="action-btn btn-green" id="audioBtn" onclick="submitAudioQuery()">Process Audio Note</button>
+            </div>
+
+            <!-- MODULE 3: PDF PROCEDURE AUDITOR -->
+            <div class="card">
+                <div class="card-header-flex">
+                    <span class="card-title title-pdf">📋 Procedure Auditor</span>
+                </div>
+                <div class="file-upload-wrapper">
+                    <span class="file-label-text" id="pdfLabel">Select procedure PDF to audit</span>
+                    <input type="file" id="pdfFile" accept=".pdf" onchange="updateFileLabel('pdfFile', 'pdfLabel')">
+                </div>
+                <div class="input-with-mic">
+                    <input type="text" id="pdfRequirements" placeholder="Criteria (e.g. ISO 9001, ASME Sec VIII)...">
+                    <button class="btn-mic" id="pdfMicBtn" type="button" onclick="toggleVoiceTyping('pdfRequirements', 'pdfMicBtn')">🎤</button>
+                </div>
+                <div class="loader" id="pdfLoader"><div class="spinner"></div>Running procedure cross-check...</div>
+                <button class="action-btn btn-purple" id="pdfBtn" onclick="submitPdfReview()">Audit Document</button>
+            </div>
+
+            <!-- MODULE 4: DIRECT VAULT INGESTION -->
+            <div class="card">
+                <div class="card-header-flex">
+                    <span class="card-title title-vault">📁 Ingest New Record</span>
+                </div>
+                <div class="file-upload-wrapper">
+                    <span class="file-label-text" id="vaultLabel">Select doc (.pdf, .docx, .xlsx, .txt)</span>
+                    <input type="file" id="vaultFile" accept=".pdf,.docx,.xlsx,.xls,.txt,.log" onchange="updateFileLabel('vaultFile', 'vaultLabel')">
+                </div>
+                <input type="text" id="vaultSubfolder" placeholder="Optional subfolder (e.g. ITP, NDT)...">
+                <div class="loader" id="vaultLoader"><div class="spinner"></div>Saving file to vault repository...</div>
+                <button class="action-btn btn-cyan" id="vaultBtn" onclick="submitVaultUpload()">Store in Vault</button>
+            </div>
+        </div>
+
+        <!-- SHARED DISPLAY NODE -->
+        <div class="output-panel" id="responsePanel">
+            <div class="output-header">
+                <span>Evaluation Output</span>
+                <span id="responseMeta" class="metadata-pill"></span>
+            </div>
+            <div class="output-content" id="responseText"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8000";
+
+        function updateFileLabel(inputId, labelId) {
+            const input = document.getElementById(inputId);
+            const label = document.getElementById(labelId);
+            if (input.files.length > 0) {
+                label.innerText = `Selected: ${input.files[0].name}`;
+                label.style.color = "#0f172a";
+            }
+        }
+
+        function toggleState(loading, loaderId, buttonId) {
+            document.getElementById(loaderId).style.display = loading ? "flex" : "none";
+            document.getElementById(buttonId).disabled = loading;
+            if (loading) {
+                document.getElementById("responsePanel").style.display = "none";
+            }
+        }
+
+        function displayResponse(text, meta) {
+            document.getElementById("responseText").innerText = text;
+            document.getElementById("responseMeta").innerText = meta;
+            document.getElementById("responsePanel").style.display = "block";
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        // --- WEB SPEECH RECOGNITION (VOICE TYPING) ---
+        let recognition = null;
+        let isRecording = false;
+
+        function toggleVoiceTyping(targetInputId, micButtonId) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                alert("Voice typing requires Google Chrome or Microsoft Edge.");
+                return;
+            }
+
+            const micBtn = document.getElementById(micButtonId);
+            const targetInput = document.getElementById(targetInputId);
+
+            if (isRecording) {
+                recognition.stop();
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                isRecording = true;
+                micBtn.innerText = "🛑 Stop";
+                micBtn.style.backgroundColor = "#ef4444";
+            };
+
+            recognition.onresult = function(event) {
+                let currentTranscript = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    currentTranscript += event.results[i][0].transcript;
+                }
+                
+                if (event.results[event.results.length - 1].isFinal) {
+                    targetInput.value += (targetInput.value ? " " : "") + currentTranscript.trim();
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech Recognition Error:", event.error);
+                if (event.error === 'not-allowed') {
+                    alert("Microphone permission denied. Please allow microphone access in your browser address bar.");
+                }
+            };
+
+            recognition.onend = function() {
+                isRecording = false;
+                micBtn.innerText = micButtonId.includes('chat') ? "🎤 Speak" : "🎤";
+                micBtn.style.backgroundColor = "#64748b";
+            };
+
+            recognition.start();
+        }
+
+        // --- API DISPATCH FUNCTIONS ---
+
+        async function submitTextChat() {
+            const queryText = document.getElementById("chatInput").value.trim();
+            if (!queryText) return alert("Please specify a valid text query first.");
+            
+            toggleState(true, "chatLoader", "chatBtn");
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: queryText })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    displayResponse(data.response, "Text Query System");
+                } else {
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (err) {
+                alert(`Pipeline connectivity lost: ${err.message}`);
+            } finally {
+                toggleState(false, "chatLoader", "chatBtn");
+            }
+        }
+
+        async function submitAudioQuery() {
+            const fileInput = document.getElementById("audioFile");
+            if (fileInput.files.length === 0) return alert("Please select a WhatsApp .opus file first.");
+            
+            const formData = new FormData();
+            formData.append("audio_file", fileInput.files[0]);
+            
+            toggleState(true, "audioLoader", "audioBtn");
+            try {
+                const response = await fetch(`${API_BASE}/chat-audio`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const trackingMeta = `Audio [Lang: ${data.detected_language.toUpperCase()}]`;
+                    const structuralOutput = `📝 Transcript: "${data.speech_transcript}"\n📁 Saved Audio: ${data.audio_saved_as}\n\n${data.response}`;
+                    displayResponse(structuralOutput, trackingMeta);
+                } else {
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (err) {
+                alert(`Audio processing execution failed: ${err.message}`);
+            } finally {
+                toggleState(false, "audioLoader", "audioBtn");
+            }
+        }
+
+        async function submitPdfReview() {
+            const fileInput = document.getElementById("pdfFile");
+            const reqInput = document.getElementById("pdfRequirements").value.trim();
+            if (fileInput.files.length === 0) return alert("Please upload a target PDF file to review.");
+            
+            const formData = new FormData();
+            formData.append("procedure_pdf", fileInput.files[0]);
+            if (reqInput) formData.append("project_requirements", reqInput);
+            
+            toggleState(true, "pdfLoader", "pdfBtn");
+            try {
+                const response = await fetch(`${API_BASE}/review-procedure`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const output = `${data.compliance_report}\n\n[Archived in Vault at: ${data.saved_in_vault}]`;
+                    displayResponse(output, "PDF Compliance Audit");
+                } else {
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (err) {
+                alert(`Document pipeline execution error: ${err.message}`);
+            } finally {
+                toggleState(false, "pdfLoader", "pdfBtn");
+            }
+        }
+
+        async function submitVaultUpload() {
+            const fileInput = document.getElementById("vaultFile");
+            const subfolderInput = document.getElementById("vaultSubfolder").value.trim();
+            if (fileInput.files.length === 0) return alert("Please select a document to upload.");
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            if (subfolderInput) formData.append("subfolder", subfolderInput);
+
+            toggleState(true, "vaultLoader", "vaultBtn");
+            try {
+                const response = await fetch(`${API_BASE}/upload-vault`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const feedback = `File "${data.filename}" stored into vault at "${data.saved_rel_path}".\nIt is now indexed and available for chat and audit queries.`;
+                    displayResponse(feedback, "Vault Upload Successful");
+                    fileInput.value = "";
+                    document.getElementById("vaultLabel").innerText = "Select doc (.pdf, .docx, .xlsx, .txt)";
+                    document.getElementById("vaultSubfolder").value = "";
+                } else {
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (err) {
+                alert(`Vault ingestion error: ${err.message}`);
+            } finally {
+                toggleState(false, "vaultLoader", "vaultBtn");
+            }
+        }
+    </script>
+</body>
+</html>

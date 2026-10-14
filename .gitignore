@@ -1,0 +1,9 @@
+# Ignore local document vault and database
+pqm_vault/
+__pycache__/
+.env
+
+# Ignore large downloaded models if any are in the project folder
+*.bin
+*.gguf
+*.onnx
